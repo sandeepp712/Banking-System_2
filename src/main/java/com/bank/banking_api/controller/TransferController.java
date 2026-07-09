@@ -6,6 +6,9 @@ import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
 import java.util.Currency;
+import java.util.UUID;
+
+import static tools.jackson.databind.jsonFormatVisitors.JsonValueFormat.UUID;
 
 @RestController
 @RequestMapping("/api/transfers")
@@ -21,9 +24,15 @@ public class TransferController {
     @PostMapping
     public String transfer(@RequestParam String from,
                            @RequestParam String to,
-                           @RequestParam BigDecimal amount) {
+                           @RequestParam BigDecimal amount,
+                           @RequestParam(required = false) String idempotency_key) {
+
+        // If client didn't send a key, generate one (fallback for simple clients)
+        if (idempotency_key == null || idempotency_key.isEmpty()) {
+            idempotency_key = "WITHDRAW-" + java.util.UUID.randomUUID().toString();
+        }
         Money money = Money.of(amount, Currency.getInstance("INR"));
-        transferService.transfer(from, to, money);
+        transferService.transfer(from, to, money, idempotency_key);
         return "Transfer successful";
     }
 }

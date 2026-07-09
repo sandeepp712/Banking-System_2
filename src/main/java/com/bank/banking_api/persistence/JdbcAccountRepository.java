@@ -9,6 +9,7 @@ import org.springframework.stereotype.Repository;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.Currency;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -61,5 +62,10 @@ public class JdbcAccountRepository {
     public void update(Account accounts) {
         String sql = "Update accounts SET balance_amount=?,updated_at=? where account_number=?";
         jdbcTemplate.update(sql, accounts.getBalance().getAmount(), java.sql.Timestamp.from(accounts.getUpdatedAt()), accounts.getAccountNumber());
+    }
+
+    public List<Account> findAll() {
+        String sql = "Select * from accounts ORDER BY created_at DESC";
+        return jdbcTemplate.query(sql, rowMapper);
     }
 }
