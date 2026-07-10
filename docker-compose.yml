@@ -1,0 +1,38 @@
+services:
+  # Service 1: PostgreSql Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: banking-db
+    environment:
+      POSTGRES_DB: banking_system
+      POSTGRES_USER: bank_user
+      POSTGRES_PASSWORD: sandeep712
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL","pg_isready -U bank_user -d banking_system"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # Service 2: Spring boot App
+  banking_api:
+    build: . # Builds from your dockerfile
+    container_name: banking-app
+    ports:
+      - "8080:8080"
+    environment:
+      DB_HOST: postgres
+      DB_NAME: banking_system
+      DB_USER: bank_user
+      DB_password: sandeep712
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
