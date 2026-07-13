@@ -3,6 +3,7 @@ package com.bank.banking_api.domain;
 import com.bank.banking_api.exception.CurrencyMismatchException;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.Currency;
 import java.util.Objects;
 
@@ -21,7 +22,7 @@ public final class Money{
     private final Currency currency;
 
     public Money(BigDecimal amount, Currency currency) {
-        this.amount = Objects.requireNonNull(amount);
+        this.amount = Objects.requireNonNull(amount.setScale(2, RoundingMode.HALF_UP));
         this.currency = Objects.requireNonNull(currency);
     }
 

@@ -2,6 +2,7 @@ package com.bank.banking_api.persistence;
 
 import com.bank.banking_api.domain.Money;
 import com.bank.banking_api.domain.Transaction;
+import com.bank.banking_api.domain.TransactionRepository;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Repository;
@@ -12,7 +13,7 @@ import java.util.Currency;
 import java.util.UUID;
 
 @Repository
-public class JdbcTransactionRepository {
+public class JdbcTransactionRepository implements TransactionRepository {
     private final JdbcTemplate jdbcTemplate;
 
     public RowMapper<Transaction> rowMapper = (rs, rowNum) -> {

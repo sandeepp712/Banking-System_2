@@ -1,10 +1,12 @@
 package com.bank.banking_api.persistence;
 
 import com.bank.banking_api.domain.Account;
+import com.bank.banking_api.domain.AccountRepository;
 import com.bank.banking_api.domain.Money;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -14,8 +16,8 @@ import java.util.Optional;
 import java.util.UUID;
 
 @Repository
-public class JdbcAccountRepository {
-    private JdbcTemplate jdbcTemplate;
+public class JdbcAccountRepository implements AccountRepository {
+    private final JdbcTemplate jdbcTemplate;
 
     public RowMapper<Account> rowMapper = (rs, rowNum) -> {
         UUID id = rs.getObject("id", UUID.class);
@@ -53,12 +55,20 @@ public class JdbcAccountRepository {
         );
     }
 
+    // To find the account number
     public Optional<Account> findByAccountNumber(String accountNumber) {
         String sql = "Select * from accounts where account_number = ?";
         return jdbcTemplate.query(sql, rowMapper, accountNumber).stream().findFirst();
     }
 
+    // To find the account number with exclusive locks
+    public Optional<Account> findByAccountNumberForUpdate(String accountNumber) {
+        String sql= "Select * from accounts where account_number = ? FOR UPDATE";
+        List<Account> accounts = jdbcTemplate.query(sql, rowMapper, accountNumber);
+        return accounts.stream().findFirst();
+    }
 
+    @Transactional
     public void update(Account accounts) {
         String sql = "Update accounts SET balance_amount=?,updated_at=? where account_number=?";
         jdbcTemplate.update(sql, accounts.getBalance().getAmount(), java.sql.Timestamp.from(accounts.getUpdatedAt()), accounts.getAccountNumber());
