@@ -22,6 +22,9 @@ public class TransferService {
 
     @Transactional
     public void transfer(String fromAccountId, String toAccountId, Money amount, String idempotencyKey) {
+        if (transactionRepository.existsByIdempotencyKey(idempotencyKey)) {
+            throw new DuplicateKeyException("Transaction id " + idempotencyKey + " already exists.");
+        }
 
         //Idempotency check : stop double spending
         try {
@@ -53,7 +56,7 @@ public class TransferService {
             Transaction tx = new Transaction("TRANSFER", fromAccountId, toAccountId, amount, idempotencyKey);
             transactionRepository.save(tx);
         } catch (DuplicateKeyException e) {
-            throw new DuplicateKeyException("Transaction id " + fromAccountId + " already exists");
+            throw new DuplicateKeyException("Transaction id " + idempotencyKey + " already exists");
         }
     }
 }
