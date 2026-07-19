@@ -16,34 +16,40 @@ import java.time.LocalDate;
 import java.util.UUID;
 
 @Service
-public class AuthService{
+public class AuthService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationManager authenticationManager;
     private final JwtTokenProvider jwtTokenProvider;
 
-    public AuthService(UserRepository userRepository,PasswordEncoder passwordEncoder,AuthenticationManager authenticationManager,JwtTokenProvider jwtTokenProvider){
+    public AuthService(UserRepository userRepository, PasswordEncoder passwordEncoder, AuthenticationManager authenticationManager, JwtTokenProvider jwtTokenProvider) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.authenticationManager = authenticationManager;
         this.jwtTokenProvider = jwtTokenProvider;
     }
 
-    public void register(String username, String rawPassword, AccountRole role, Instant created_at){
-        if(userRepository.findByUsername(username).isPresent()){
+    public void register(String username, String rawPassword, AccountRole role, Instant created_at) {
+        if (userRepository.findByUsername(username).isPresent()) {
             throw new IllegalArgumentException("Username already exists!");
         }
 
+        // For password complexity
+        if (rawPassword.length() < 8 || !rawPassword.matches(".*[A-Z].*") ||
+                !rawPassword.matches(".[0-9].*") || !rawPassword.matches(".*[^a-zA-Z0-9].*]")) {
+            throw new IllegalArgumentException("Password must contain at least 8 characters with uppercase, number and special characters.");
+        }
+
         String encodedPassword = passwordEncoder.encode(rawPassword);
-        UUID id=UUID.randomUUID();
-        User user=new User(id,username,encodedPassword,role,created_at);
+        UUID id = UUID.randomUUID();
+        User user = new User(id, username, encodedPassword, role, created_at);
         userRepository.save(user);
     }
 
-    public String login(String username, String rawPassword){
+    public String login(String username, String rawPassword) {
         //1. Authenication using Spring Security
-        Authentication auth= authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(username,rawPassword)
+        Authentication auth = authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(username, rawPassword)
         );
 
         //2. If successful, generate token

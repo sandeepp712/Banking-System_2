@@ -77,16 +77,16 @@ public class JwtTokenProvider {
      */
     public UUID getUserIdFromToken(String token) {
         try {
-            String userId = Jwts.parser()
+            String subject = Jwts.parser()
                     .verifyWith(getVerificationKey())
                     .build()
                     .parseSignedClaims(token)
                     .getPayload()
                     .getSubject();
 
-            return UUID.fromString(userId);
+            return UUID.fromString(subject);
         } catch (JwtException e) {
-            return null;
+            throw new JwtException("Invalid Token", e);
         }
     }
 
