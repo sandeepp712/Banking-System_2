@@ -8,6 +8,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.UUID;
+
 @RestController
 @RequestMapping("/api/v1/auth")
 public class AuthController {
@@ -19,25 +21,26 @@ public class AuthController {
     }
 
     @PostMapping("/register")
-    public ResponseEntity<String> register(@Valid @RequestBody RegisterRequest request) {
+    public ResponseEntity<RegisterResponse> register(@Valid @RequestBody RegisterRequest request) {
         AccountRole role;
 
         try {
             role = AccountRole.valueOf(request.role.toUpperCase());
         } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body("Invalid role. Allowed: " + java.util.Arrays.toString(AccountRole.values()));
+            return ResponseEntity.badRequest().body(new RegisterResponse(request.username, null, "Invalid role. Allowed: " + java.util.Arrays.toString(AccountRole.values())));
         }
 
         authService.register(request.username, request.password, role, java.time.Instant.now());
 
-        return ResponseEntity.ok("User registered successfully");
+        return ResponseEntity.ok(new RegisterResponse(request.username, role, "User registered successfully!"));
     }
 
 
     @PostMapping("/login")
-    public ResponseEntity<LoginResponse> login(@RequestBody LoginRequest request) {
+    public ResponseEntity<LoginResponse> login(@Valid @RequestBody LoginRequest request) {
         String token = authService.login(request.username, request.password);
-        return ResponseEntity.ok(new LoginResponse(token));
+
+        return ResponseEntity.ok(new LoginResponse(token, "Bearer "));
     }
 
 
@@ -46,12 +49,24 @@ public class AuthController {
             @NotBlank String username,
             @NotBlank String password,
             @NotBlank String role
-    ) { }
+    ) {
+    }
+
+    public record RegisterResponse(
+            String username,
+            AccountRole role,
+            String message
+    ) {
+    }
 
     public record LoginRequest(
             @NotBlank String username,
             @NotBlank String password
-    ) { }
+    ) {
+    }
 
-    public record LoginResponse(String token) { }
+    public record LoginResponse(
+            String token,
+            String tokenType) {
+    }
 }

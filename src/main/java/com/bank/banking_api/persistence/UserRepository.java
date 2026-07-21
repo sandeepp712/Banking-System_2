@@ -8,8 +8,8 @@ import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Repository;
 
 import java.sql.Timestamp;
-import java.time.Instant;
 import java.time.ZoneOffset;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -41,7 +41,9 @@ public class UserRepository {
         String sql = "SELECT * FROM users WHERE username = ?";
         try {
             User user = jdbcTemplate.queryForObject(sql, userRowMapper, username);
-            return Optional.ofNullable(user);
+            List<User> users = jdbcTemplate.query(sql, userRowMapper, username);
+
+            return users.stream().findFirst();
         } catch (EmptyResultDataAccessException e) {
             return Optional.empty();
         }
@@ -60,5 +62,10 @@ public class UserRepository {
                 user.getRole().name(),
                 createdAtTimestamp
         );
+    }
+
+    public void delete(String username) {
+        String sql = "DELETE FROM users WHERE username = ?";
+        jdbcTemplate.update(sql, username);
     }
 }
