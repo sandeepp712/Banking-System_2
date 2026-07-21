@@ -36,7 +36,7 @@ public class AuthService {
 
         // For password complexity
         if (rawPassword.length() < 8 || !rawPassword.matches(".*[A-Z].*") ||
-                !rawPassword.matches(".[0-9].*") || !rawPassword.matches(".*[^a-zA-Z0-9].*]")) {
+                !rawPassword.matches(".*[0-9].*") || !rawPassword.matches(".*[^a-zA-Z0-9].*")) {
             throw new IllegalArgumentException("Password must contain at least 8 characters with uppercase, number and special characters.");
         }
 
@@ -47,14 +47,19 @@ public class AuthService {
     }
 
     public String login(String username, String rawPassword) {
-        //1. Authenication using Spring Security
+        //1. Check if the user exists Before attempting authenication
+        if (!userRepository.findByUsername(username).isPresent()) {
+            throw new IllegalArgumentException("Username does not exists! Please register with username: "+username);
+        }
+
+        //2. Proceed Authenication using Spring Security
         Authentication auth = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(username, rawPassword)
         );
 
         //2. If successful, generate token
         CustomUserDetails userDetails = (CustomUserDetails) auth.getPrincipal();
-        assert userDetails != null;
+//        assert userDetails != null;
         return jwtTokenProvider.generateToken(userDetails);
 
     }
